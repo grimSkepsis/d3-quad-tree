@@ -13,7 +13,6 @@ body,
   overflow: hidden;
 }
 
-
 // Styles for app container
 .app-body {
   height: 100%;
@@ -21,4 +20,10 @@ body,
   margin: 0 auto;
   padding: 1rem;
   display: flex;
+}
+
+#view {
+  border: 1px solid black;
+  width: 800px;
+  height: 500px;
 }
