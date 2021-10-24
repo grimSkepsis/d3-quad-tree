@@ -1,5 +1,5 @@
-import { Particle } from "./Particle";
-import { Rectangle } from "./QuadTree";
+import { getParticleBounds, Particle, particlesHaveCollided } from "./Particle";
+import { Rectangle, QuadTree } from "./QuadTree";
 
 export const VIEW_PORT_WIDTH = 800;
 export const VIEW_PORT_HEIGHT = 500;
@@ -64,14 +64,42 @@ function getNextY(p: Particle): { y: number; dy: number } {
   return returnVal;
 }
 
-export function updateParticles(particles: Particle[]): Particle[] {
-  const updatedParticles = particles.map((p) => {
+function checkParticleCollisions(p: Particle, quad: QuadTree): Particle {
+  let collidedParticles: Particle[] = quad.query(getParticleBounds(p));
+  let hasCollided: boolean = false;
+
+  for (let i = 0; i < collidedParticles.length; i++) {
+    const colP = collidedParticles[i];
+    if (colP.id !== p.id && particlesHaveCollided(p, colP)) {
+      hasCollided = true;
+      break;
+    }
+  }
+
+  if (hasCollided) {
     return {
       ...p,
-      ...getNextX(p),
-      ...getNextY(p),
+      dx: -p.dx,
+      dy: -p.dy,
     };
-  });
+  }
+  return p;
+}
+
+export function updateParticles(
+  quad: QuadTree,
+  particles: Particle[]
+): Particle[] {
+  const updatedParticles = particles
+
+    .map((p) => checkParticleCollisions(p, quad))
+    .map((p) => {
+      return {
+        ...p,
+        ...getNextX(p),
+        ...getNextY(p),
+      };
+    });
 
   return updatedParticles;
 }
