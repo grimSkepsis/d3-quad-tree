@@ -60,7 +60,7 @@ export class QuadTree {
   constructor(private _bound: Rectangle, private _capacity: number) {}
 
   public insert(p: Point): void {
-    if (this._points.length < this._capacity) {
+    if (this._points.length < this._capacity && this._quadrants.length == 0) {
       this._points.push(p);
     } else {
       if (this._quadrants.length == 0) {
@@ -83,6 +83,10 @@ export class QuadTree {
     this._quadrants = this._bound.returnQuadrants().map((rect) => {
       return new QuadTree(rect, this._capacity);
     });
+    this._points.forEach((p) => {
+      this.insert(p);
+    });
+    this._points = [];
   }
 
   public includes(p: Point): boolean {

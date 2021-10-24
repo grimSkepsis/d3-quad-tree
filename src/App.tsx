@@ -6,25 +6,35 @@ import * as rUtil from "./util/RenderingUtil";
 import { interval } from "d3-timer";
 import { QuadTree, Rectangle } from "./util/QuadTree";
 
-const particles: Particle[] = [];
-let quadTree: QuadTree = new QuadTree(
-  new Rectangle(
-    rUtil.VIEW_PORT_WIDTH / 2,
-    rUtil.VIEW_PORT_HEIGHT / 2,
-    rUtil.VIEW_PORT_WIDTH / 2,
-    rUtil.VIEW_PORT_HEIGHT / 2
-  ),
-  4
-);
-let quadTreeRenderingData: Rectangle[] = [];
+let particles: Particle[] = [];
+let quadTree: QuadTree;
+
+function generateQuadTree(p: Particle[]): QuadTree {
+  let newQuad = new QuadTree(
+    new Rectangle(
+      rUtil.VIEW_PORT_WIDTH / 2,
+      rUtil.VIEW_PORT_HEIGHT / 2,
+      rUtil.VIEW_PORT_WIDTH / 2,
+      rUtil.VIEW_PORT_HEIGHT / 2
+    ),
+    4
+  );
+
+  p.forEach((p) => {
+    newQuad.insert(p);
+  });
+  return newQuad;
+}
 let currId = 0;
 
 const App = () => {
-  // const t = interval(() => {
-  //   particles = rUtil.updateParticles(particles);
-  //   let svg = d3.select("#view");
-  //   rUtil.renderParticles(svg, particles);
-  // }, rUtil.REFRESH_RATE);
+  const t = interval(() => {
+    particles = rUtil.updateParticles(particles);
+    quadTree = generateQuadTree(particles);
+    let svg = d3.select("#view");
+    rUtil.renderParticles(svg, particles);
+    rUtil.renderQuadTree(svg, quadTree.getRenderingData());
+  }, rUtil.REFRESH_RATE);
 
   useEffect(() => {
     const svg = d3.select("#view");
@@ -40,12 +50,8 @@ const App = () => {
         r: rUtil.PARTICLE_WIDTH,
       };
       currId++;
-      quadTree.insert(newParticle);
-      quadTreeRenderingData = quadTree.getRenderingData();
-      console.log(quadTreeRenderingData);
       particles.push(newParticle);
-      rUtil.renderParticles(svg, particles);
-      rUtil.renderQuadTree(svg, quadTreeRenderingData);
+      quadTree = generateQuadTree(particles);
     });
   });
 
