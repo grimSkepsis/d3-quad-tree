@@ -85,24 +85,13 @@ function getNextY(p: Particle): { y: number; dy: number } {
 }
 
 function checkParticleCollisions(p: Particle, quad: QuadTree): Particle {
-  let collidedParticles: Particle[] = quad.query(getParticleBounds(p));
+  const collidedParticles: Particle[] = quad.query(getParticleBounds(p));
   let hasCollided = false;
   for (let i = 0; i < collidedParticles.length; i++) {
     const colP = collidedParticles[i];
     if (colP.id !== p.id && particlesHaveCollided(p, colP)) {
-      let vCollision = { x: p.x - colP.x, y: p.y - colP.y };
-      let dist = getParticleDistance(p, colP);
-      let vCollisionNorm = { x: vCollision.x / dist, y: vCollision.y / dist };
-      let vRelativeVelocity = { x: p.dx - colP.dx, y: p.dy - colP.dy };
-      let speed =
-        vRelativeVelocity.x * vCollisionNorm.x +
-        vRelativeVelocity.y * vCollisionNorm.y;
       hasCollided = true;
-      if (speed > 0) continue;
-      p.dx -= speed * vCollisionNorm.x;
-      p.dy -= speed * vCollisionNorm.y;
-      colP.dx += speed * vCollisionNorm.x;
-      colP.dy += speed * vCollisionNorm.y;
+      collideParticles(p, colP);
     }
   }
 
@@ -110,6 +99,29 @@ function checkParticleCollisions(p: Particle, quad: QuadTree): Particle {
     ...p,
     c: hasCollided ? "blue" : "red",
   };
+}
+
+/**
+ * Applies collision effects to 2 particles
+ * @param p1
+ * @param p2
+ * @returns
+ */
+function collideParticles(p1: Particle, p2: Particle): void {
+  //logic taken from https://spicyyoghurt.com/tutorials/html5-javascript-game-development/collision-detection-physics
+  const vCollision = { x: p1.x - p2.x, y: p1.y - p2.y };
+  const dist = getParticleDistance(p1, p2);
+  const vCollisionNorm = { x: vCollision.x / dist, y: vCollision.y / dist };
+  const vRelativeVelocity = { x: p1.dx - p2.dx, y: p1.dy - p2.dy };
+  const speed =
+    vRelativeVelocity.x * vCollisionNorm.x +
+    vRelativeVelocity.y * vCollisionNorm.y;
+
+  if (speed > 0) return;
+  p1.dx -= speed * vCollisionNorm.x;
+  p1.dy -= speed * vCollisionNorm.y;
+  p2.dx += speed * vCollisionNorm.x;
+  p2.dy += speed * vCollisionNorm.y;
 }
 
 export function updateParticles(
