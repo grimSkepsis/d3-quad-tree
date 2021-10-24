@@ -13,7 +13,7 @@ export function renderParticles(
 ) {
   svg
     .selectAll("circle")
-    .data(part)
+    .data(part, (p) => p.id)
     .join("circle")
     .attr("r", (p) => p.r)
     .attr("fill", (p) => p.c)
