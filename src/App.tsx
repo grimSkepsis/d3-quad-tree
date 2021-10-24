@@ -8,6 +8,10 @@ import { QuadTree, Rectangle } from "./util/QuadTree";
 
 let particles: Particle[] = [];
 let quadTree: QuadTree;
+let canvas = d3
+  .select("#view")
+  .attr("width", rUtil.VIEW_PORT_WIDTH)
+  .attr("height", rUtil.VIEW_PORT_HEIGHT);
 
 function generateQuadTree(p: Particle[]): QuadTree {
   let newQuad = new QuadTree(
@@ -29,25 +33,22 @@ let currId = 0;
 const t = interval(() => {
   quadTree = generateQuadTree(particles);
   particles = rUtil.updateParticles(quadTree, particles);
-
-  let svg = d3.select("#view");
-  rUtil.renderParticles(svg, particles);
-  rUtil.renderQuadTree(svg, quadTree.getRenderingData());
+  rUtil.renderScene(canvas, particles, quadTree);
 }, rUtil.REFRESH_RATE);
 
 const App = () => {
   const [particleCount, setParticleCount] = useState(0);
 
   useEffect(() => {
-    const svg = d3.select("#view");
-    svg.on("click", function ($event) {
+    canvas.on("click", null);
+    canvas.on("click", function ($event) {
       const [x, y] = d3.pointer($event);
       const newParticle: Particle = {
         id: currId,
         x: x, // Takes the pixel number to convert to number
         y: y,
-        dx: 5,
-        dy: 1,
+        dx: 5 * (0.5 - Math.random()),
+        dy: 5 * (0.5 - Math.random()),
         c: "red",
         r: rUtil.PARTICLE_WIDTH,
       };

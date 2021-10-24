@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import { getParticleBounds, Particle, particlesHaveCollided } from "./Particle";
 import { Rectangle, QuadTree } from "./QuadTree";
 
@@ -8,36 +9,60 @@ export const PARTICLE_WIDTH = 10;
 
 export const REFRESH_RATE = 20;
 
+export function renderScene(
+  canvas: d3.Selection<HTMLCanvasElement, unknown, HTMLElement, any>,
+  part: Particle[],
+  quad: QuadTree
+): void {
+  const context = canvas.node()?.getContext("2d");
+  if (context) {
+    context.fillStyle = "#fff";
+    context.rect(
+      0,
+      0,
+      Number(canvas.attr("width")),
+      Number(canvas.attr("height"))
+    );
+    context.fill();
+    renderParticles(context, part);
+    renderQuadTree(context, quad.getRenderingData());
+  }
+}
+
 export function renderParticles(
-  svg: d3.Selection<d3.BaseType, unknown, HTMLElement, any>,
+  context: CanvasRenderingContext2D,
   part: Particle[]
 ): void {
-  svg
-    .selectAll("circle")
-    .data(part, (p) => p.id)
-    .join("circle")
-    .attr("r", (p) => p.r)
-    .attr("fill", (p) => p.c)
-    .transition()
-    .attr("cx", (p) => p.x)
-    .attr("cy", (p) => p.y)
-    .duration(REFRESH_RATE);
+  part.forEach((p) => {
+    context.beginPath();
+    context.arc(p.x, p.y, p.r, 0, 2 * Math.PI);
+    context.fillStyle = p.c;
+    context.fill();
+    context.closePath();
+  });
 }
 
 export function renderQuadTree(
-  svg: d3.Selection<d3.BaseType, unknown, HTMLElement, any>,
+  context: CanvasRenderingContext2D,
   rect: Rectangle[]
 ): void {
-  svg
-    .selectAll("rect")
-    .data(rect)
-    .join("rect")
-    .attr("x", (r) => r.x - r.dimX)
-    .attr("y", (r) => r.y - r.dimY)
-    .attr("width", (r) => r.dimX * 2)
-    .attr("height", (r) => r.dimY * 2)
-    .attr("fill", "transparent")
-    .attr("stroke", "black");
+  rect.forEach((r) => {
+    context.beginPath();
+    context.rect(r.x - r.dimX, r.y - r.dimY, r.dimX * 2, r.dimY * 2);
+    context.strokeStyle = "black";
+    context.stroke();
+    context.closePath();
+  });
+  // svg
+  //   .selectAll("rect")
+  //   .data(rect)
+  //   .join("rect")
+  //   .attr("x", (r) => r.x - r.dimX)
+  //   .attr("y", (r) => r.y - r.dimY)
+  //   .attr("width", (r) => r.dimX * 2)
+  //   .attr("height", (r) => r.dimY * 2)
+  //   .attr("fill", "transparent")
+  //   .attr("stroke", "black");
 }
 
 function getNextX(p: Particle): { x: number; dx: number } {
