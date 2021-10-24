@@ -1,16 +1,17 @@
 import { Particle } from "./Particle";
+import { Rectangle } from "./QuadTree";
 
-export const VIEW_PORT_WIDTH: number = 800;
-export const VIEW_PORT_HEIGHT: number = 500;
+export const VIEW_PORT_WIDTH = 800;
+export const VIEW_PORT_HEIGHT = 500;
 
-export const PARTICLE_WIDTH: number = 10;
+export const PARTICLE_WIDTH = 10;
 
-export const REFRESH_RATE: number = 20;
+export const REFRESH_RATE = 20;
 
 export function renderParticles(
   svg: d3.Selection<d3.BaseType, unknown, HTMLElement, any>,
   part: Particle[]
-) {
+): void {
   svg
     .selectAll("circle")
     .data(part, (p) => p.id)
@@ -23,8 +24,24 @@ export function renderParticles(
     .duration(REFRESH_RATE);
 }
 
+export function renderQuadTree(
+  svg: d3.Selection<d3.BaseType, unknown, HTMLElement, any>,
+  rect: Rectangle[]
+): void {
+  svg
+    .selectAll("rect")
+    .data(rect)
+    .join("rect")
+    .attr("x", (r) => r.x - r.dimX)
+    .attr("y", (r) => r.y - r.dimY)
+    .attr("width", (r) => r.dimX * 2)
+    .attr("height", (r) => r.dimY * 2)
+    .attr("fill", "transparent")
+    .attr("stroke", "black");
+}
+
 function getNextX(p: Particle): { x: number; dx: number } {
-  let returnVal = { x: p.x + p.dx, dx: p.dx };
+  const returnVal = { x: p.x + p.dx, dx: p.dx };
   if (p.dx < 0 && p.x + p.dx - p.r < 0) {
     returnVal.x = p.r;
     returnVal.dx = -returnVal.dx;
@@ -36,7 +53,7 @@ function getNextX(p: Particle): { x: number; dx: number } {
 }
 
 function getNextY(p: Particle): { y: number; dy: number } {
-  let returnVal = { y: p.y + p.dy, dy: p.dy };
+  const returnVal = { y: p.y + p.dy, dy: p.dy };
   if (p.dy < 0 && p.y + p.dy - p.r < 0) {
     returnVal.y = p.r;
     returnVal.dy = -returnVal.dy;
@@ -48,7 +65,7 @@ function getNextY(p: Particle): { y: number; dy: number } {
 }
 
 export function updateParticles(particles: Particle[]): Particle[] {
-  let updatedParticles = particles.map((p) => {
+  const updatedParticles = particles.map((p) => {
     return {
       ...p,
       ...getNextX(p),
