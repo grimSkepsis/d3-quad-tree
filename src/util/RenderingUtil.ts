@@ -1,5 +1,10 @@
-import { useContext } from "react";
-import { getParticleBounds, Particle, particlesHaveCollided } from "./Particle";
+import { reduce } from "d3-array";
+import {
+  getParticleBounds,
+  Particle,
+  particlesHaveCollided,
+  getParticleDistance,
+} from "./Particle";
 import { Rectangle, QuadTree } from "./QuadTree";
 
 export const VIEW_PORT_WIDTH = 800;
@@ -53,16 +58,6 @@ export function renderQuadTree(
     context.stroke();
     context.closePath();
   });
-  // svg
-  //   .selectAll("rect")
-  //   .data(rect)
-  //   .join("rect")
-  //   .attr("x", (r) => r.x - r.dimX)
-  //   .attr("y", (r) => r.y - r.dimY)
-  //   .attr("width", (r) => r.dimX * 2)
-  //   .attr("height", (r) => r.dimY * 2)
-  //   .attr("fill", "transparent")
-  //   .attr("stroke", "black");
 }
 
 function getNextX(p: Particle): { x: number; dx: number } {
@@ -91,24 +86,30 @@ function getNextY(p: Particle): { y: number; dy: number } {
 
 function checkParticleCollisions(p: Particle, quad: QuadTree): Particle {
   let collidedParticles: Particle[] = quad.query(getParticleBounds(p));
-  let hasCollided: boolean = false;
-
+  let hasCollided = false;
   for (let i = 0; i < collidedParticles.length; i++) {
     const colP = collidedParticles[i];
     if (colP.id !== p.id && particlesHaveCollided(p, colP)) {
+      let vCollision = { x: p.x - colP.x, y: p.y - colP.y };
+      let dist = getParticleDistance(p, colP);
+      let vCollisionNorm = { x: vCollision.x / dist, y: vCollision.y / dist };
+      let vRelativeVelocity = { x: p.dx - colP.dx, y: p.dy - colP.dy };
+      let speed =
+        vRelativeVelocity.x * vCollisionNorm.x +
+        vRelativeVelocity.y * vCollisionNorm.y;
       hasCollided = true;
-      break;
+      if (speed > 0) continue;
+      p.dx -= speed * vCollisionNorm.x;
+      p.dy -= speed * vCollisionNorm.y;
+      colP.dx += speed * vCollisionNorm.x;
+      colP.dy += speed * vCollisionNorm.y;
     }
   }
 
-  if (hasCollided) {
-    return {
-      ...p,
-      dx: -p.dx,
-      dy: -p.dy,
-    };
-  }
-  return p;
+  return {
+    ...p,
+    c: hasCollided ? "blue" : "red",
+  };
 }
 
 export function updateParticles(

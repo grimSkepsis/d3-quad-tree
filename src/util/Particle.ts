@@ -16,8 +16,10 @@ export function getParticleBounds(p: Particle): Rectangle {
 
 export function particlesHaveCollided(p1: Particle, p2: Particle) {
   const INTERSECTION_DIST = p1.r + p2.r;
-  const ACTUAL_DIST = Math.sqrt(
-    Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2)
-  );
+  const ACTUAL_DIST = getParticleDistance(p1, p2);
   return ACTUAL_DIST <= INTERSECTION_DIST;
+}
+
+export function getParticleDistance(p1: Particle, p2: Particle): number {
+  return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
 }
